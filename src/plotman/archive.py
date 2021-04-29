@@ -49,8 +49,8 @@ def compute_priority(phase, gb_free, n_plots):
 
 def get_archdir_freebytes(arch_cfg):
     archdir_freebytes = {}
-    df_cmd = ('ssh %s@%s df -aBK | grep " %s/"' %
-        (arch_cfg.rsyncd_user, arch_cfg.rsyncd_host, arch_cfg.rsyncd_path) )
+    df_cmd = ('ssh -p %s %s@%s df -aBK | grep " %s/"' %
+        (arch_cfg.ssh_port, arch_cfg.rsyncd_user, arch_cfg.rsyncd_host, arch_cfg.rsyncd_path) )
     with subprocess.Popen(df_cmd, shell=True, stdout=subprocess.PIPE) as proc:
         for line in proc.stdout.readlines():
             fields = line.split()
@@ -63,10 +63,10 @@ def get_archdir_freebytes(arch_cfg):
     return archdir_freebytes
 
 def rsync_dest(arch_cfg, arch_dir):
-    rsync_path = arch_dir.replace(arch_cfg.rsyncd_path, arch_cfg.rsyncd_module)
+    rsync_path = arch_cfg.rsyncd_path + "/" + arch_cfg.farm_path + "/" + arch_dir.split('/')[-1]
     if rsync_path.startswith('/'):
         rsync_path = rsync_path[1:]  # Avoid dup slashes.  TODO use path join?
-    rsync_url = 'rsync://%s@%s:12000/%s' % (
+    rsync_url = '%s@%s:%s' % (
             arch_cfg.rsyncd_user, arch_cfg.rsyncd_host, rsync_path)
     return rsync_url
 
@@ -134,7 +134,7 @@ def archive(dir_cfg, all_jobs):
 
     bwlimit = dir_cfg.archive.rsyncd_bwlimit
     throttle_arg = ('--bwlimit=%d' % bwlimit) if bwlimit else ''
-    cmd = ('rsync %s --remove-source-files -P %s %s' %
-            (throttle_arg, chosen_plot, rsync_dest(dir_cfg.archive, archdir)))
+    cmd = ("rsync %s -e 'ssh -v -p %s' --partial --inplace --remove-source-files -P %s %s" %
+            (throttle_arg, dir_cfg.archive.ssh_port, chosen_plot, rsync_dest(dir_cfg.archive, archdir)))
 
     return (True, cmd)
