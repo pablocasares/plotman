@@ -64,11 +64,11 @@ def get_archdir_freebytes(arch_cfg):
     return archdir_freebytes
 
 def rsync_dest(arch_cfg, arch_dir):
-    rsync_path = arch_dir.split('/')[-1]
-    if rsync_path.startswith('/'):
-        rsync_path = rsync_path[1:]  # Avoid dup slashes.  TODO use path join?
-    rsync_url = '%s@%s:%s' % (
-            arch_cfg.rsyncd_user, arch_cfg.rsyncd_host, rsync_path)
+    #rsync_path = arch_dir.split('/')[-1]
+    #if rsync_path.startswith('/'):
+    #    rsync_path = rsync_path[1:]  # Avoid dup slashes.  TODO use path join?
+    rsync_url = '%s@%s:' % (
+            arch_cfg.rsyncd_user, arch_cfg.rsyncd_host)
     return rsync_url
 
 # TODO: maybe consolidate with similar code in job.py?
