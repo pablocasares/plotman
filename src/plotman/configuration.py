@@ -42,6 +42,8 @@ def get_validated_configs():
 class Archive:
     rsyncd_module: str
     rsyncd_path: str
+    farm_path: str
+    ssh_port: str
     rsyncd_bwlimit: int
     rsyncd_host: str
     rsyncd_user: str
