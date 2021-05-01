@@ -106,7 +106,7 @@ def archive(dir_cfg, all_jobs):
         if priority >= best_priority and dir_plots:
             best_priority = priority
             chosen_plot = dir_plots[0]
-
+    print('Chosen plot: ' + chosen_plot)
     if not chosen_plot:
         return (False, 'No plots found')
 
@@ -118,6 +118,7 @@ def archive(dir_cfg, all_jobs):
     #
     archdir_freebytes = get_archdir_freebytes(dir_cfg.archive)
     if not archdir_freebytes:
+        print('No free archive dirs found.')
         return(False, 'No free archive dirs found.')
     
     archdir = ''
@@ -136,5 +137,5 @@ def archive(dir_cfg, all_jobs):
     throttle_arg = ('--bwlimit=%d' % bwlimit) if bwlimit else ''
     cmd = ("rsync %s -e 'ssh -v -i /home/chia/.ssh/id_rsa -p %s' --partial --inplace --remove-source-files -P %s %s" %
             (throttle_arg, dir_cfg.archive.ssh_port, chosen_plot, rsync_dest(dir_cfg.archive, archdir)))
-
+    print('CMD: ' + cmd)
     return (True, cmd)
