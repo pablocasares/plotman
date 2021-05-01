@@ -133,7 +133,7 @@ def archive(dir_cfg, all_jobs):
         return(False, 'No archive directories found with enough free space')
     
     msg = 'Found %s with ~%d GB free' % (archdir, freespace / plot_util.GB)
-
+    print(msg)
     bwlimit = dir_cfg.archive.rsyncd_bwlimit
     throttle_arg = ('--bwlimit=%d' % bwlimit) if bwlimit else ''
     cmd = ("rsync %s -e 'ssh -v -i /home/chia/.ssh/id_rsa -p %s' --partial --inplace --remove-source-files -P %s %s" %
