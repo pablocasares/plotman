@@ -10,7 +10,7 @@ from datetime import datetime
 
 import psutil
 import texttable as tt
-
+from random import randrange
 from plotman import manager, plot_util
 
 # TODO : write-protect and delete-protect archived plots
@@ -24,12 +24,12 @@ def spawn_archive_process(dir_cfg, all_jobs):
     
     # Look for running archive jobs.  Be robust to finding more than one
     # even though the scheduler should only run one at a time.
-    arch_jobs = get_running_archive_jobs(dir_cfg.archive)
+    (archives_not_in_use, arch_jobs) = get_running_archive_jobs(dir_cfg.archive)
     
-    if arch_jobs:
+    if arch_jobs and len(archives_not_in_use) == 0:
         archiving_status = 'pid: ' + ', '.join(map(str, arch_jobs))
     else:
-        (should_start, status_or_cmd) = archive(dir_cfg, all_jobs)
+        (should_start, status_or_cmd) = archive(dir_cfg, all_jobs, archives_not_in_use)
         if not should_start:
             archiving_status = status_or_cmd
         else:
@@ -75,22 +75,23 @@ def compute_priority(phase, gb_free, n_plots):
 
     return priority
 
-def get_archdir_freebytes(arch_cfg):
+def get_archdir_freebytes(archives_not_in_use):
     archdir_freebytes = {}
-    df_cmd = ('ssh -p %s -i /home/chia/.ssh/id_rsa_for_df %s@%s df -aBK | grep "%s "' %
-        (arch_cfg.ssh_port, arch_cfg.rsyncd_user, arch_cfg.rsyncd_host, arch_cfg.rsyncd_path) )
-    with subprocess.Popen(df_cmd, shell=True, stdout=subprocess.PIPE) as proc:
-        for line in proc.stdout.readlines():
-            fields = line.split()
-            if fields[3] == b'-':
-                # not actually mounted
-                continue
-            freebytes = int(fields[3][:-1]) * 1024  # Strip the final 'K'
-            archdir = (fields[5]).decode('ascii')
-            archdir_freebytes[archdir] = freebytes
+    for archive_dst in archives_not_in_use:
+        df_cmd = ('ssh -p %s -i /home/chia/.ssh/id_rsa_for_df %s@%s df -aBK | grep "%s "' %
+            (archive_dst.ssh_port, archive_dst.rsyncd_user, archive_dst.rsyncd_host, archive_dst.rsyncd_path) )
+        with subprocess.Popen(df_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for line in proc.stdout.readlines():
+                fields = line.split()
+                if fields[3] == b'-':
+                    # not actually mounted
+                    continue
+                freebytes = int(fields[3][:-1]) * 1024  # Strip the final 'K'
+                archdir = (fields[5]).decode('ascii')
+                archdir_freebytes[archdir] = freebytes
     return archdir_freebytes
 
-def rsync_dest(arch_cfg, arch_dir):
+def rsync_dest(arch_cfg):
     rsync_url = '%s@%s:' % (
             arch_cfg.rsyncd_user, arch_cfg.rsyncd_host)
     return rsync_url
@@ -100,17 +101,23 @@ def get_running_archive_jobs(arch_cfg):
     '''Look for running rsync jobs that seem to match the pattern we use for archiving
        them.  Return a list of PIDs of matching jobs.'''
     jobs = []
-    dest = rsync_dest(arch_cfg, '/')
-    for proc in psutil.process_iter(['pid', 'name']):
-        with contextlib.suppress(psutil.NoSuchProcess):
-            if proc.name() == 'rsync':
-                args = proc.cmdline()
-                for arg in args:
-                    if arg.startswith(dest):
-                        jobs.append(proc.pid)
-    return jobs
+    archives_not_in_use = []
+    archive_used = False
+    for archive_dst in arch_cfg.archive:
+        dest = archive_dst.rsyncd_host
+        for proc in psutil.process_iter(['pid', 'name']):
+            with contextlib.suppress(psutil.NoSuchProcess):
+                if proc.name() == 'rsync':
+                    args = proc.cmdline()
+                    for arg in args:
+                        if arg.contains(dest):
+                            jobs.append(proc.pid)
+                            archive_used = True
+                        if not archive_used:
+                            archives_not_in_use.append(archive_dst)
+    return (archives_not_in_use, jobs)
 
-def archive(dir_cfg, all_jobs):
+def archive(dir_cfg, all_jobs, archives_not_in_use):
     '''Configure one archive job.  Needs to know all jobs so it can avoid IO
     contention on the plotting dstdir drives.  Returns either (False, <reason>) 
     if we should not execute an archive job or (True, <cmd>) with the archive
@@ -141,7 +148,7 @@ def archive(dir_cfg, all_jobs):
     #
     # Pick first archive dir with sufficient space
     #
-    archdir_freebytes = get_archdir_freebytes(dir_cfg.archive)
+    archdir_freebytes = get_archdir_freebytes(archives_not_in_use)
     if not archdir_freebytes:
         return(False, 'No free archive dirs found.')
     
@@ -149,8 +156,8 @@ def archive(dir_cfg, all_jobs):
     available = [(d, space) for (d, space) in archdir_freebytes.items() if 
                  space > 1.2 * plot_util.get_k32_plotsize()]
     if len(available) > 0:
-        index = min(dir_cfg.archive.index, len(available) - 1)
-        (archdir, freespace) = sorted(available)[index]
+        random_archive_index = randrange(len(available))
+        (archdir, freespace) = available[index]
 
     if not archdir:
         return(False, 'No archive directories found with enough free space')
