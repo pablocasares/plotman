@@ -153,7 +153,7 @@ def archive(dir_cfg, all_jobs, archives_not_in_use):
         return(False, 'No free archive dirs found.')
     
     archdir = ''
-    available = [(d, (space, archive_dst)) for (d, space, archive_dst)) in archdir_freebytes.items() if 
+    available = [(d, (space, archive_dst)) for (d, (space, archive_dst)) in archdir_freebytes.items() if 
                  space > 1.2 * plot_util.get_k32_plotsize()]
     if len(available) > 0:
         random_archive_index = randrange(len(available))
