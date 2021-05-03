@@ -60,7 +60,7 @@ class Directories:
     dst: List[str]
     tmp2: Optional[str] = None
     tmp_overrides: Optional[Dict[str, TmpOverrides]] = None
-    archive: Optional[Archive] = None
+    archive: Optional[List[Archive]] = None
 
 @dataclass
 class Scheduling:
