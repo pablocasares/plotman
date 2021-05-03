@@ -103,7 +103,7 @@ def get_running_archive_jobs(arch_cfg):
     jobs = []
     archives_not_in_use = []
     archive_used = False
-    for archive_dst in arch_cfg.archive:
+    for archive_dst in arch_cfg:
         dest = archive_dst.rsyncd_host
         for proc in psutil.process_iter(['pid', 'name']):
             with contextlib.suppress(psutil.NoSuchProcess):
