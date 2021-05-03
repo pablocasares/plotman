@@ -167,6 +167,6 @@ def archive(dir_cfg, all_jobs, archives_not_in_use):
     bwlimit = archive_dst.rsyncd_bwlimit
     throttle_arg = ('--bwlimit=%d' % bwlimit) if bwlimit else ''
     cmd = ("rsync %s -e 'ssh -v -i /home/chia/.ssh/id_rsa -p %s' --partial-dir=partial --remove-source-files -P %s %s" %
-            (throttle_arg, archive_dst.ssh_port, chosen_plot, rsync_dest(archive_dst, archdir)))
+            (throttle_arg, archive_dst.ssh_port, chosen_plot, rsync_dest(archive_dst)))
     
     return (True, cmd)
