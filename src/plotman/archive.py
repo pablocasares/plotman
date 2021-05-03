@@ -88,7 +88,7 @@ def get_archdir_freebytes(archives_not_in_use):
                     continue
                 freebytes = int(fields[3][:-1]) * 1024  # Strip the final 'K'
                 archdir = (fields[5]).decode('ascii')
-                archdir_freebytes[archdir] = freebytes
+                archdir_freebytes[archdir] = (freebytes, archive_dst)
     return archdir_freebytes
 
 def rsync_dest(arch_cfg):
@@ -153,20 +153,20 @@ def archive(dir_cfg, all_jobs, archives_not_in_use):
         return(False, 'No free archive dirs found.')
     
     archdir = ''
-    available = [(d, space) for (d, space) in archdir_freebytes.items() if 
+    available = [(d, (space, archive_dst)) for (d, space, archive_dst)) in archdir_freebytes.items() if 
                  space > 1.2 * plot_util.get_k32_plotsize()]
     if len(available) > 0:
         random_archive_index = randrange(len(available))
-        (archdir, freespace) = available[random_archive_index]
+        (archdir, (freespace, archive_dst)) = available[random_archive_index]
 
     if not archdir:
         return(False, 'No archive directories found with enough free space')
     
     msg = 'Found %s with ~%d GB free' % (archdir, freespace / plot_util.GB)
 
-    bwlimit = dir_cfg.archive.rsyncd_bwlimit
+    bwlimit = archive_dst.rsyncd_bwlimit
     throttle_arg = ('--bwlimit=%d' % bwlimit) if bwlimit else ''
     cmd = ("rsync %s -e 'ssh -v -i /home/chia/.ssh/id_rsa -p %s' --partial-dir=partial --remove-source-files -P %s %s" %
-            (throttle_arg, dir_cfg.archive.ssh_port, chosen_plot, rsync_dest(dir_cfg.archive, archdir)))
+            (throttle_arg, archive_dst.ssh_port, chosen_plot, rsync_dest(archive_dst, archdir)))
     
     return (True, cmd)
