@@ -110,7 +110,7 @@ def get_running_archive_jobs(arch_cfg):
                 if proc.name() == 'rsync':
                     args = proc.cmdline()
                     for arg in args:
-                        if arg.contains(dest):
+                        if arg in dest:
                             jobs.append(proc.pid)
                             archive_used = True
                         if not archive_used:
