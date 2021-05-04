@@ -171,8 +171,8 @@ def dst_dir_report(jobs, dstdirs, width, prefix=''):
     return tab.draw()
 
 def arch_dir_report(archdir_freebytes, width, prefix=''):
-    cells = ['%s:%5dGB' % (abbr_path(d, prefix), int(int(space) / plot_util.GB))
-            for (d, space) in sorted(archdir_freebytes.items())]
+    cells = ['%s:%5dGB' % (abbr_path(d, archive_dst.rsyncd_path), int(int(space) / plot_util.GB))
+            for (d, (space, archive_dst)) in sorted(archdir_freebytes.items())]
     if not cells:
         return ''
 
