@@ -158,7 +158,7 @@ def curses_main(stdscr):
         tmp_prefix = os.path.commonpath(cfg.directories.tmp)
         dst_prefix = os.path.commonpath(cfg.directories.dst)
         if archiving_configured:
-            arch_prefix = cfg.directories.archive
+            arch_prefix = ''
 
         n_tmpdirs = len(cfg.directories.tmp)
         n_tmpdirs_half = int(n_tmpdirs / 2)
@@ -171,7 +171,7 @@ def curses_main(stdscr):
         dst_report = reporting.dst_dir_report(
             jobs, cfg.directories.dst, n_cols, dst_prefix)
         if archiving_configured:
-            arch_report = reporting.arch_dir_report(archdir_freebytes, n_cols, archives)
+            arch_report = reporting.arch_dir_report(archdir_freebytes, n_cols)
             if not arch_report:
                 arch_report = '<no archive dir info>'
         else:
