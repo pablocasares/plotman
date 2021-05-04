@@ -115,8 +115,8 @@ def get_running_archive_jobs(arch_cfg):
                         if arg in dest:
                             jobs.append(proc.pid)
                             archive_used = True
-            if not archive_used:
-                archives_not_in_use.append(archive_dst)
+        if not archive_used:
+            archives_not_in_use.append(archive_dst)
     return (archives_not_in_use, jobs)
 
 def archive(dir_cfg, all_jobs, archives_not_in_use):
