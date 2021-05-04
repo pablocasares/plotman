@@ -77,8 +77,6 @@ def compute_priority(phase, gb_free, n_plots):
 
 def get_archdir_freebytes(archives_not_in_use):
     archdir_freebytes = {}
-    print("archives_not_in_use")
-    print(archives_not_in_use)
     for archive_dst in archives_not_in_use:
         df_cmd = ('ssh -p %s -i /home/chia/.ssh/id_rsa_for_df %s@%s df -aBK | grep "%s "' %
             (archive_dst.ssh_port, archive_dst.rsyncd_user, archive_dst.rsyncd_host, archive_dst.rsyncd_path) )
