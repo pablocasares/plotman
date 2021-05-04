@@ -158,7 +158,7 @@ def archive(dir_cfg, all_jobs, archives_not_in_use):
     if len(available) > 0:
         random_archive_index = randrange(len(available))
         (archdir, (freespace, archive_dst)) = available[random_archive_index]
-
+    print((archdir, (freespace, archive_dst)))
     if not archdir:
         return(False, 'No archive directories found with enough free space')
     
