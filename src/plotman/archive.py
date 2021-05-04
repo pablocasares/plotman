@@ -25,7 +25,8 @@ def spawn_archive_process(dir_cfg, all_jobs):
     # Look for running archive jobs.  Be robust to finding more than one
     # even though the scheduler should only run one at a time.
     (archives_not_in_use, arch_jobs) = get_running_archive_jobs(dir_cfg.archive)
-    
+    print(archives_not_in_use)
+    print(arch_jobs)
     if arch_jobs and len(archives_not_in_use) == 0:
         archiving_status = 'pid: ' + ', '.join(map(str, arch_jobs))
     else:
