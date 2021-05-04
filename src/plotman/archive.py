@@ -88,7 +88,7 @@ def get_archdir_freebytes(archives_not_in_use):
                     continue
                 freebytes = int(fields[3][:-1]) * 1024  # Strip the final 'K'
                 archdir = (fields[5]).decode('ascii')
-                archdir_freebytes[archdir] = (freebytes, archive_dst)
+                archdir_freebytes[archive_dst.rsyncd_host+':'+archdir] = (freebytes, archive_dst)
     return archdir_freebytes
 
 def rsync_dest(arch_cfg):
