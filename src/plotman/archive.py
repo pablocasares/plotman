@@ -92,7 +92,7 @@ def get_archdir_freebytes(archives_not_in_use):
     return archdir_freebytes
 
 def rsync_dest(arch_cfg):
-    rsync_url = '%s@%s:' % (
+    rsync_url = '%s@[%s]:' % (
             arch_cfg.rsyncd_user, arch_cfg.rsyncd_host)
     return rsync_url
 
