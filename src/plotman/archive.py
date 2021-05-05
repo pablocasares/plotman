@@ -117,6 +117,20 @@ def get_running_archive_jobs(arch_cfg):
             archives_not_in_use.append(archive_dst)
     return (archives_not_in_use, jobs)
 
+def get_used_plots(dir_plots):
+    '''Look for running rsync jobs that seem to match the pattern we use for archiving
+       them.  Return a list of PIDs of matching jobs.'''
+    used_plots = []
+    for proc in psutil.process_iter(['pid', 'name']):
+       with contextlib.suppress(psutil.NoSuchProcess):
+           if proc.name() == 'rsync':
+               args = proc.cmdline()
+               for arg in args:
+                   for dir_plot in dir_plots:
+                       if dir_plot in args:
+                           used_plots.append(dir_plot)
+    return used_plots
+
 def archive(dir_cfg, all_jobs, archives_not_in_use):
     '''Configure one archive job.  Needs to know all jobs so it can avoid IO
     contention on the plotting dstdir drives.  Returns either (False, <reason>) 
@@ -132,12 +146,14 @@ def archive(dir_cfg, all_jobs, archives_not_in_use):
     for d in dir_cfg.dst:
         ph = dir2ph.get(d, (0, 0))
         dir_plots = plot_util.list_k32_plots(d)
+        used_plots = get_used_plots(dir_plots)
+        unused_plots = set(dir_plots) - set(used_plots)
         gb_free = plot_util.df_b(d) / plot_util.GB
         n_plots = len(dir_plots)
-        priority = compute_priority(ph, gb_free, n_plots) 
+        priority = compute_priority(ph, gb_free, n_plots)
         if priority >= best_priority and dir_plots:
             best_priority = priority
-            chosen_plot = dir_plots[0]
+            chosen_plot = list(unused_plots)[0]
 
     if not chosen_plot:
         return (False, 'No plots found')
