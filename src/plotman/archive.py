@@ -102,8 +102,8 @@ def get_running_archive_jobs(arch_cfg):
        them.  Return a list of PIDs of matching jobs.'''
     jobs = []
     archives_not_in_use = []
-    archive_used = False
     for archive_dst in arch_cfg:
+        archive_used = False
         dest = archive_dst.rsyncd_host
         for proc in psutil.process_iter(['pid', 'name']):
             with contextlib.suppress(psutil.NoSuchProcess):
@@ -153,7 +153,8 @@ def archive(dir_cfg, all_jobs, archives_not_in_use):
         priority = compute_priority(ph, gb_free, n_plots)
         if priority >= best_priority and dir_plots:
             best_priority = priority
-            chosen_plot = list(unused_plots)[0]
+            if len(unused_plots) > 0:
+                chosen_plot = list(unused_plots)[0]
 
     if not chosen_plot:
         return (False, 'No plots found')
